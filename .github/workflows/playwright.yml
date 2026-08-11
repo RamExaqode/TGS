@@ -1,13 +1,16 @@
 name: Playwright CI
 
 on:
+  # master is this repository's branch; main is kept in case it is renamed.
   push:
     branches:
       - main
+      - master
 
   pull_request:
     branches:
       - main
+      - master
 
 jobs:
   Playwright-Test:
@@ -30,6 +33,10 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
 
+      # These secrets are not configured yet. Until they are, the run fails
+      # fast with "Missing required environment variable TSR_BASE_URL" —
+      # which is the intended behaviour, not a broken workflow.
+      # Add them under Settings -> Secrets and variables -> Actions.
       - name: Run Tests
         run: npm test
         env:

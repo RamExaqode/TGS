@@ -38,13 +38,20 @@ export default defineConfig({
     /* Base URL to use in actions like `await page.goto('')`. */
     baseURL: env.baseURL,
 
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
+    /* Headed locally so a run can be watched; headless on CI, which has no
+       display and would otherwise fail to launch a browser at all. */
+    headless: !!process.env.CI,
 
-    headless: false,
-    viewport: null,
+    /* `viewport: null` means "use the window size", which pairs with the
+       maximised window locally. A headless CI window is only 800x600, so
+       there it gets an explicit desktop viewport instead — otherwise the
+       sidebar collapses and layout-dependent locators miss. */
+    viewport: process.env.CI ? { width: 1920, height: 1080 } : null,
     launchOptions: {
-      args: ['--start-maximized'],
+      args: process.env.CI ? [] : ['--start-maximized'],
     },
+
+    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
 
     trace: 'on-first-retry',
   },

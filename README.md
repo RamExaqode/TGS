@@ -296,16 +296,47 @@ still looks like a pass.
 
 ## Continuous integration
 
-`.github/workflows/playwright.yml` runs on push and PR to `main`: installs
-dependencies, installs Chromium, runs `npm test`, and uploads both
-`playwright-report/` and `allure-results/`.
+`.github/workflows/playwright.yml` runs on push and PR to `main` or `master`:
+installs dependencies, installs Chromium, runs `npm test`, and uploads both
+`playwright-report/` and `allure-results/` as artifacts (`if: always()`, so
+they survive a failing run).
 
-Credentials come from repository secrets — `TSR_BASE_URL`, `TSR_EMAIL`,
-`TSR_PASSWORD`, `TSR_USER_NAME`. **These must be created before CI can pass.**
+### Required secrets — not configured yet
 
-> ⚠️ **CI is expected to fail as configured.** `playwright.config.ts` sets
-> `headless: false`, and a GitHub runner has no display. Either set
-> `headless: !!process.env.CI` or wrap the run in `xvfb-run`.
+| Secret | Value |
+|---|---|
+| `TSR_BASE_URL` | `https://admin.dev.turnkeysr.ai` |
+| `TSR_EMAIL` | The test account's Yopmail address |
+| `TSR_PASSWORD` | The test account's password |
+| `TSR_USER_NAME` | Name the dashboard greets it with |
+
+Add them under **Settings → Secrets and variables → Actions**.
+
+Until then the workflow runs but the suite stops immediately with:
+
+```
+Error: Missing required environment variable TSR_BASE_URL.
+```
+
+That is the intended behaviour. `config/env.ts` validates configuration at
+load, so a missing secret fails in seconds with the variable's name rather
+than surfacing as a login timeout thirty seconds into the run.
+
+### Headless on CI
+
+`playwright.config.ts` switches on `process.env.CI`:
+
+```ts
+headless: !!process.env.CI,
+viewport: process.env.CI ? { width: 1920, height: 1080 } : null,
+launchOptions: { args: process.env.CI ? [] : ['--start-maximized'] },
+```
+
+Local runs stay headed and maximised. CI runs headless — a GitHub runner has
+no display, so a headed launch fails outright. The explicit viewport matters
+just as much: `viewport: null` means "use the window size", and a headless
+window is 800×600, which collapses the sidebar and breaks layout-dependent
+locators.
 
 ---
 
