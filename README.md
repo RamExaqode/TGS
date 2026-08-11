@@ -399,6 +399,6 @@ The headline items:
 
 - **`.env` is gitignored** and must stay that way. `.env.example` holds placeholders only.
 - **`playwright/.auth/user.json` is a live session.** Anyone holding it is signed in as that admin — no password, no OTP. Already covered by `.gitignore`.
-- **Traces can contain the bearer token** in request headers. Traces are captured on retry, and retries only happen on CI — which is exactly where artifacts get published. Worth knowing before making those artifacts public.
+- **Traces can contain the session token.** The app sends it on every request it makes, so it appears in the network entries a trace records. Traces are captured on retry, and retries only happen on CI — which is exactly where artifacts get published. Worth knowing before making those artifacts public.
 - **The test mailbox is public.** Anyone can open the Yopmail inbox for the test account and read its OTPs. Treat the account as untrusted and never reuse the password elsewhere.
 - **Never hardcode a JWT.** Tokens live 15 minutes; the suite reads a fresh one from the saved session on every run.

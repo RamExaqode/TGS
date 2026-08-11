@@ -1,7 +1,7 @@
 # UI Test Scenarios — TurnkeySR Admin
 
 Full scenario inventory for `admin.dev.turnkeysr.ai`, with current automation
-status. API testing is out of scope for this document.
+status. Everything here is browser-driven.
 
 ## Legend
 
