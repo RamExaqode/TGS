@@ -106,3 +106,19 @@ jobs:
           name: Allure Results
           path: allure-results/
           retention-days: 14
+
+      # The regression tests exist to produce these; without this step they are
+      # written to the runner and thrown away with it.
+      #
+      # They hold real names and email addresses, so the artifact is only as
+      # private as the repository. Remove this step if the repo is ever made
+      # public.
+      - name: Upload CSV exports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: CSV Exports
+          path: output/csv/
+          # Nothing is written when only the smoke suite runs.
+          if-no-files-found: ignore
+          retention-days: 14

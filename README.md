@@ -316,9 +316,18 @@ wins and the older is cancelled.
 ### What a run does
 
 Installs dependencies, restores or installs Chromium, runs the chosen suite,
-writes a results table to the run summary, and uploads `playwright-report/`
-and `allure-results/` as artifacts. Every step after the tests uses
-`if: always()`, so a red run still produces its evidence.
+writes a results table to the run summary, and uploads three artifacts. Every
+step after the tests uses `if: always()`, so a red run still produces its
+evidence.
+
+| Artifact | Contents |
+|---|---|
+| `Playwright Report` | The HTML report — traces and screenshots for failures |
+| `Allure Results` | Raw Allure data; run `allure serve` on it locally |
+| `CSV Exports` | The generated CSVs. Only present when the regression suite ran |
+
+> The CSVs contain real names and email addresses, so that artifact is only as
+> private as the repository. Drop the step if the repo is ever made public.
 
 Caching covers both npm (via `setup-node`) and the Playwright browser
 binaries, keyed on `package-lock.json`. On a cache hit the workflow still runs
