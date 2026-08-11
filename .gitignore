@@ -1,0 +1,26 @@
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+
+# Allure
+/allure-results/
+/allure-report/
+
+# Local environment (.env.example stays tracked)
+.env
+
+# Generated CSV exports
+/output/
+
+# API suite — kept local, not part of the committed project.
+# All of it is self-contained: nothing tracked imports these.
+/api/
+/tests/api/
+/fixtures/api-fixtures.ts
+/utils/auth-token.ts
+/playwright.api.config.ts

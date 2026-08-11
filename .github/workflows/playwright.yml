@@ -1,0 +1,53 @@
+name: Playwright CI
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  Playwright-Test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup NodeJS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Tests
+        run: npm test
+        env:
+          TSR_BASE_URL: ${{ secrets.TSR_BASE_URL }}
+          TSR_EMAIL: ${{ secrets.TSR_EMAIL }}
+          TSR_PASSWORD: ${{ secrets.TSR_PASSWORD }}
+          TSR_USER_NAME: ${{ secrets.TSR_USER_NAME }}
+
+      - name: Upload Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Playwright Report
+          path: playwright-report/
+
+      - name: Upload Allure Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Allure Results
+          path: allure-results/
