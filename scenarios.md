@@ -41,7 +41,7 @@ Automated today: 6 test files — `dashboard.spec.ts`, `login.spec.ts` (currentl
 
 | # | Scenario | Pri | Status | Notes |
 |---|---|---|---|---|
-| 1.1 | Log in with valid credentials, OTP verifies, lands on dashboard | P1 | ✅ | `login.spec.ts` — currently `test.skip`'d |
+| 1.1 | Log in with valid credentials, OTP verifies, lands on dashboard | P1 | ✅ | `login.spec.ts`. Opts out of the shared session and spends its own OTP |
 | 1.2 | Session is saved and reused across tests | P1 | ✅ | `setup/auth.setup.ts` + `storageState` |
 | 1.3 | Login page renders email, password and Sign in | P1 | ✅ | `verifyLoginPageLoaded()` |
 | 1.4 | Invalid password shows an error, stays on `/login` | P1 | ⬜ | Needs the error copy |
@@ -243,14 +243,13 @@ pages follow. Send the page's HTML or a screenshot and these become concrete.
 
 Ranked by value per unit of effort:
 
-1. **Un-skip `login.spec.ts`** (1.1) — the critical path is currently not tested
-2. **Logout and session-expiry** (3.7, 3.8, 1.11) — page objects already exist; three short tests
-3. **Console-error and failed-request listeners** (8.1, 8.2) — one fixture, applies to every existing test at no extra runtime
-4. **Search on both tables** (2.3.4–2.3.8, 4.2.6–4.2.8) — `search()` is already on both page objects and unused
-5. **Restore the metric assertions** (2.1.2–2.1.4) — the spec regressed to logging only
-6. **Negative login paths** (1.4, 1.8) — no data risk, real coverage
-7. **API-failure and empty-state rendering** (8.11, 8.12) — `page.route()` mocking, no dev data touched
-8. **Companies / Chatbot / Help** — blocked on seeing the screens
+1. **Logout and session-expiry** (3.7, 3.8, 1.11) — page objects already exist; three short tests
+2. **Console-error and failed-request listeners** (8.1, 8.2) — one fixture, applies to every existing test at no extra runtime
+3. **Search on both tables** (2.3.4–2.3.8, 4.2.6–4.2.8) — `search()` is already on both page objects and unused
+4. **Restore the metric assertions** (2.1.2–2.1.4) — the spec regressed to logging only
+5. **Negative login paths** (1.4, 1.8) — no data risk, real coverage
+6. **Failed-response and empty-state rendering** (8.11, 8.12) — `page.route()` mocking, no dev data touched
+7. **Companies / Chatbot / Help** — blocked on seeing the screens
 
 ## Two things needing a decision
 

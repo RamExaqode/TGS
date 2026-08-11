@@ -5,11 +5,14 @@ import { test } from '../../fixtures/test-fixtures';
    so it opts out of the shared session. */
 test.use({ storageState: { cookies: [], origins: [] } });
 
-test.skip('login using Yopmail OTP', {
+test('login using Yopmail OTP', {
   tag: ['@smoke'],
 }, async ({ loginPage, otpPage, yopmailPage }) => {
   test.setTimeout(120000);
 
+  /* Note what is already in the mailbox before triggering anything: the setup
+     project has just logged in with the same account, so "the latest email"
+     would be its code rather than this test's. */
   await yopmailPage.openMailbox(mailboxName);
 
   const staleOtp = await yopmailPage.readCurrentOtp();

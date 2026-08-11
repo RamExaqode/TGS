@@ -64,13 +64,17 @@ function collect(suites, out = []) {
 
 const specs = collect(report.suites);
 
-const ICON = {
-  expected: '✅',
-  passed: '✅',
-  skipped: '⏭️',
-  flaky: '⚠️',
-  unexpected: '❌',
-  failed: '❌',
+/**
+ * Icon plus the word. Two statuses that differ only by a small glyph are easy
+ * to misread — a skipped test looked like a passing one in an early run.
+ */
+const STATUS = {
+  expected: '✅ Passed',
+  passed: '✅ Passed',
+  skipped: '⏭️ Skipped',
+  flaky: '⚠️ Flaky',
+  unexpected: '❌ Failed',
+  failed: '❌ Failed',
 };
 
 const counts = specs.reduce((acc, spec) => {
@@ -88,7 +92,7 @@ write(
     `${counts.skipped ?? 0} skipped — in ${seconds}s\n`
 );
 
-write('| | Test | File | Time |');
+write('| Status | Test | File | Time |');
 write('|---|---|---|---|');
 
 /* Failures first: on a red run they are the only rows anyone reads. */
@@ -99,8 +103,12 @@ specs
   .forEach((spec) => {
     const retried = spec.retries > 0 ? ` _(${spec.retries} retry)_` : '';
 
+    /* A duration for something that never started is noise, not data. */
+    const time =
+      spec.status === 'skipped' ? '–' : `${(spec.ms / 1000).toFixed(1)}s`;
+
     write(
-      `| ${ICON[spec.status] ?? '❔'} | ${spec.title}${retried} | \`${spec.file}\` | ${(spec.ms / 1000).toFixed(1)}s |`
+      `| ${STATUS[spec.status] ?? '❔ Unknown'} | ${spec.title}${retried} | \`${spec.file}\` | ${time} |`
     );
   });
 
