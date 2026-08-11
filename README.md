@@ -296,10 +296,38 @@ still looks like a pass.
 
 ## Continuous integration
 
-`.github/workflows/playwright.yml` runs on push and PR to `main` or `master`:
-installs dependencies, installs Chromium, runs `npm test`, and uploads both
-`playwright-report/` and `allure-results/` as artifacts (`if: always()`, so
-they survive a failing run).
+`.github/workflows/playwright.yml`.
+
+### Triggers
+
+| Trigger | Behaviour |
+|---|---|
+| **Manual** (`workflow_dispatch`) | Actions tab → *Playwright CI* → **Run workflow**, with a dropdown to pick `all`, `smoke` or `regression` |
+| **Push to `main` / `master`** | Runs the full suite, except when the push only touches `**.md`, `.gitignore` or `.env.example` |
+
+Documentation commits are excluded on purpose: every run performs a real login
+and consumes a one-time password from a shared mailbox, so a README typo
+should not spend one.
+
+Runs are also serialised with a `concurrency` group. Two runs at once would
+race for the same inbox and could each pick up the other's code; the newer run
+wins and the older is cancelled.
+
+### What a run does
+
+Installs dependencies, restores or installs Chromium, runs the chosen suite,
+writes a results table to the run summary, and uploads `playwright-report/`
+and `allure-results/` as artifacts. Every step after the tests uses
+`if: always()`, so a red run still produces its evidence.
+
+Caching covers both npm (via `setup-node`) and the Playwright browser
+binaries, keyed on `package-lock.json`. On a cache hit the workflow still runs
+`playwright install-deps`, because the OS libraries the browser links against
+live outside the cached directory.
+
+`retries` is **1** on CI rather than Playwright's usual 2 — a failure that
+survives one retry is not flake, and the extra attempt mostly triples the wall
+time of a genuinely broken suite.
 
 ### Required secrets — not configured yet
 

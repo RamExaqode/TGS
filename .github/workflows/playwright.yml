@@ -1,24 +1,41 @@
 name: Playwright CI
 
 on:
-  # master is this repository's branch; main is kept in case it is renamed.
+  # Run the suite on demand, optionally narrowing it to one set.
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: Which tests to run
+        type: choice
+        default: all
+        options:
+          - all
+          - smoke
+          - regression
+
   push:
     branches:
       - main
       - master
+    # Every run performs a real login and consumes a one-time password from a
+    # shared mailbox, so documentation-only commits should not trigger one.
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+      - '.env.example'
 
-  pull_request:
-    branches:
-      - main
-      - master
+# Two runs at once would race each other for the same OTP inbox and both
+# could pick up the wrong code. Newer run wins; the older one is cancelled.
+concurrency:
+  group: playwright-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   Playwright-Test:
-
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
-
       - name: Checkout Code
         uses: actions/checkout@v4
 
@@ -26,24 +43,53 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
+          cache: npm
 
       - name: Install Dependencies
         run: npm ci
 
-      - name: Install Playwright Browsers
+      # Browser binaries are ~150 MB and change only with the Playwright
+      # version, which is pinned by the lockfile.
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium
 
-      # These secrets are not configured yet. Until they are, the run fails
-      # fast with "Missing required environment variable TSR_BASE_URL" —
-      # which is the intended behaviour, not a broken workflow.
+      # On a cache hit the binaries are already present, but the OS libraries
+      # they link against are not — those live outside the cached directory.
+      - name: Install browser system dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+
+      # Secrets are not configured yet. Until they are, the run stops in
+      # seconds with "Missing required environment variable TSR_BASE_URL",
+      # which is the intended behaviour rather than a broken workflow.
       # Add them under Settings -> Secrets and variables -> Actions.
       - name: Run Tests
-        run: npm test
+        run: |
+          case "${{ inputs.suite || 'all' }}" in
+            smoke)      npm run test:smoke ;;
+            regression) npm run test:regression ;;
+            *)          npm test ;;
+          esac
         env:
           TSR_BASE_URL: ${{ secrets.TSR_BASE_URL }}
           TSR_EMAIL: ${{ secrets.TSR_EMAIL }}
           TSR_PASSWORD: ${{ secrets.TSR_PASSWORD }}
           TSR_USER_NAME: ${{ secrets.TSR_USER_NAME }}
+          YOPMAIL_URL: https://yopmail.com/en/
+
+      # Results table on the run page itself, so a failure can be read without
+      # downloading and unzipping the HTML report.
+      - name: Job summary
+        if: always()
+        run: node .github/scripts/summary.js
 
       - name: Upload Report
         if: always()
@@ -51,6 +97,7 @@ jobs:
         with:
           name: Playwright Report
           path: playwright-report/
+          retention-days: 14
 
       - name: Upload Allure Results
         if: always()
@@ -58,3 +105,4 @@ jobs:
         with:
           name: Allure Results
           path: allure-results/
+          retention-days: 14

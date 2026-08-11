@@ -1,7 +1,33 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices, ReporterDescription } from '@playwright/test';
 
 import { AUTH_FILE } from './auth-file';
 import { env } from './config/env';
+
+const isCI = !!process.env.CI;
+
+const reporters: ReporterDescription[] = [
+  /* Per-test lines in the terminal. Without this the html reporter only
+     prints failures, so a green run says nothing about what actually ran. */
+  ['list'],
+  /* Built-in report: fastest path to a trace when something fails locally. */
+  ['html', { open: 'never' }],
+  /* Allure: step timelines, attachments and trend history across runs. */
+  [
+    'allure-playwright',
+    {
+      resultsDir: 'allure-results',
+      detail: true,
+      suiteTitle: true,
+    },
+  ],
+];
+
+if (isCI) {
+  /* Annotates failures inline on the diff in the GitHub UI. */
+  reporters.push(['github']);
+  /* Feeds .github/scripts/summary.js, which writes the run summary table. */
+  reporters.push(['json', { outputFile: 'test-results/results.json' }]);
+}
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -11,28 +37,14 @@ export default defineConfig({
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
-  forbidOnly: !!process.env.CI,
-  /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
+  forbidOnly: isCI,
+  /* One retry on CI. The default of two triples the wall time of a genuinely
+     broken suite, and a failure that survives one retry is not flake. */
+  retries: isCI ? 1 : 0,
   /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
+  workers: isCI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: [
-    /* Per-test lines in the terminal. Without this the html reporter only
-       prints failures, so a green run says nothing about what actually ran. */
-    ['list'],
-    /* Built-in report: fastest path to a trace when something fails locally. */
-    ['html', { open: 'never' }],
-    /* Allure: step timelines, attachments and trend history across runs. */
-    [
-      'allure-playwright',
-      {
-        resultsDir: 'allure-results',
-        detail: true,
-        suiteTitle: true,
-      },
-    ],
-  ],
+  reporter: reporters,
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */
@@ -40,15 +52,15 @@ export default defineConfig({
 
     /* Headed locally so a run can be watched; headless on CI, which has no
        display and would otherwise fail to launch a browser at all. */
-    headless: !!process.env.CI,
+    headless: isCI,
 
     /* `viewport: null` means "use the window size", which pairs with the
        maximised window locally. A headless CI window is only 800x600, so
        there it gets an explicit desktop viewport instead — otherwise the
        sidebar collapses and layout-dependent locators miss. */
-    viewport: process.env.CI ? { width: 1920, height: 1080 } : null,
+    viewport: isCI ? { width: 1920, height: 1080 } : null,
     launchOptions: {
-      args: process.env.CI ? [] : ['--start-maximized'],
+      args: isCI ? [] : ["--start-maximized"],
     },
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
