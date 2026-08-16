@@ -20,13 +20,14 @@ const reporters: ReporterDescription[] = [
       suiteTitle: true,
     },
   ],
+  /* Machine-readable run record. Feeds .github/scripts/summary.js on CI, and
+     is the file to read when a run's results are wanted as data locally. */
+  ['json', { outputFile: 'test-results/results.json' }],
 ];
 
 if (isCI) {
   /* Annotates failures inline on the diff in the GitHub UI. */
   reporters.push(['github']);
-  /* Feeds .github/scripts/summary.js, which writes the run summary table. */
-  reporters.push(['json', { outputFile: 'test-results/results.json' }]);
 }
 
 /**
