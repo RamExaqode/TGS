@@ -11,6 +11,15 @@ type SectionReport = {
   titleAsserted: boolean;
 };
 
+/* Logout is never clicked (that would end the session mid-walk), so it gets
+   its own shape: visible/clickable are checked, but there is no URL or page
+   title to report since it's never opened. */
+type LogoutReport = {
+  visible: boolean;
+  clickable: boolean;
+  opened: false;
+};
+
 /* Session comes from the `setup` project, so this starts already signed in. */
 test('every sidebar option is visible, clickable and opens its section', {
   tag: ['@smoke'],
@@ -48,12 +57,22 @@ test('every sidebar option is visible, clickable and opens its section', {
     });
   }
 
+  /* Logout is never clicked, but it must still be there afterwards —
+     that is what proves the walk left the session intact. Checked (not
+     opened) so it can still be included in the report below. */
+  await navigationPage.verifyItemClickable('Logout');
+
+  const fullReport: Partial<Record<NavItem, SectionReport | LogoutReport>> = {
+    ...report,
+    Logout: { visible: true, clickable: true, opened: false },
+  };
+
   await test.info().attach('sidebar-sections.json', {
-    body: JSON.stringify(report, null, 2),
+    body: JSON.stringify(fullReport, null, 2),
     contentType: 'application/json',
   });
 
-  console.log('Sidebar sections:\n', JSON.stringify(report, null, 2));
+  console.log('Sidebar sections:\n', JSON.stringify(fullReport, null, 2));
 
   if (unverified.length > 0) {
     test.info().annotations.push({
@@ -63,8 +82,4 @@ test('every sidebar option is visible, clickable and opens its section', {
         `Add them to EXPECTED_TITLES in pages/NavigationPage.ts.`,
     });
   }
-
-  /* Logout is never clicked, but it must still be there afterwards —
-     that is what proves the walk left the session intact. */
-  await navigationPage.verifyItemVisible('Logout');
 });
