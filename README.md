@@ -66,9 +66,9 @@ login timeout thirty seconds in.
 | Variable | Example | Purpose |
 |---|---|---|
 | `TSR_BASE_URL` | `https://admin.dev.turnkeysr.ai` | App under test. Becomes Playwright's `baseURL`, so page objects navigate with relative paths like `/login` |
-| `TSR_EMAIL` | `bansari.p@yopmail.com` | Test account. **Must be a Yopmail address** — the mailbox name is derived from the part before the `@` |
-| `TSR_PASSWORD` | `••••••••` | Test account password |
-| `TSR_USER_NAME` | `Bansari` | Name the dashboard greets the account with (`Welcome, <name>!`) |
+| `TSR_EMAIL` | `abc@yopmail.com` | Test account. **Must be a Yopmail address** — the mailbox name is derived from the part before the `@` |
+| `TSR_PASSWORD` | `abcd@1234` | Test account password |
+| `TSR_USER_NAME` | `UserName` | Name the dashboard greets the account with (`Welcome, <name>!`) |
 | `YOPMAIL_URL` | `https://yopmail.com/en/` | Where the OTP is read from. A separate origin, so it cannot ride on `TSR_BASE_URL` |
 
 `.env` is gitignored. `.env.example` is committed and contains placeholders only.
